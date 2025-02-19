@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音樂播放器</title>
+
+    <style>
+        #controlPanel span {
+            font-family: webdings;
+            cursor: pointer;
+            font-size: 1.5rem;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="audio" src="music/airball.mp3" title="周杰倫-告白汽球" onended="musicStatus()"></audio>
+
+
+    <div id="controlPanel">
+        <select onchange="changeMusic(0)">
+            <option value="music/airball.mp3">周杰倫-告白汽球</option>
+            <option value="music/elysees.mp3">Elysees</option>
+            <option value="music/nothing.mp3">Nothing Ganna Change My Love For You</option>
+            <option value="music/moon.mp3">五月天-私奔到月球</option>
+            <option value="music/rain.mp3">Rhythm Of The Rain</option>
+            <option value="music/travel.mp3">校長-帶你去旅行</option>
+        </select>
+        <hr>
+        <span onclick="playMusic()">4</span>
+        <!--  <span onclick="pauseMusic()">暫停音樂</span> -->
+        <span onclick="stopMusic()">&lt;</span>
+        <span onclick="changeMusic(-1)">9</span>
+        <span onclick="changeTime(-10)">7</span>
+        <span onclick="changeTime(10)">8</span>
+        <span onclick="changeMusic(1)">:</span>
+        <span onclick="setMute()">V</span>
+        <span onclick="">q</span>
+        <span onclick="">s</span>
+        <span onclick="">`</span>
+        <hr>
+
+        <input type="range" value="70" oninput="setVolumeByRangeBar()">
+        <input type="button" value="-" onclick="setVolume(-1)">
+        <input type="button" value="+" onclick="setVolume(1)">
+        <input type="text" readonly>
+        <hr>
+        <input type="range" value="0" oninput="setProgress()">
+        <hr>
+        <div>00:00 / 00:00</div>
+        <div>歡迎使用我的播放器</div>
+        <div>正常</div>
+    </div>
+
+    <script>
+
+        const audio = document.getElementById("audio");
+        const controlPanel = document.getElementById("controlPanel");
+
+        const funcBtn = controlPanel.getElementsByTagName("span");
+        const input = controlPanel.getElementsByTagName("input");
+        const musicList = controlPanel.getElementsByTagName("select")[0];
+        const infoPanel = controlPanel.getElementsByTagName("div");
+
+        //console.log(infoPanel[0]);  //偵錯用
+
+        const btnPlay = funcBtn[0];
+        const btnMuted = funcBtn[6];
+
+        const volRangeBar = input[0];
+        const txtVol = input[3];
+
+        const progressBar = input[4];
+
+
+
+
+
+
+
+
+
+
+        //取得時間格式
+        function getTimeFormat(t) {
+            let m = parseInt(t / 60);
+            let s = parseInt(t % 60);
+
+            m = m < 10 ? "0" + m : m;
+            s = s < 10 ? "0" + s : s;
+
+            return m + ":" + s;
+        }
+
+
+        //歌曲進度顯示
+        function getMusicTime() {
+            infoPanel[0].innerText = getTimeFormat(audio.currentTime) + " / " + getTimeFormat(audio.duration); //歌曲寺間
+
+            progressBar.value = audio.currentTime * 10000;  //進度條
+            console.log(progressBar.value);
+
+        }
+
+        function setProgress() {
+            audio.currentTime = progressBar.value / 10000;
+        }
+
+
+        //判斷歌曲播畢要做什麼事
+        function musicStatus() {
+
+            if (musicList.length == musicList.selectedIndex + 1) { //是否為最後一首歌
+                stopMusic();
+            }
+            else { //不是最後一首歌就播下一首歌
+                changeMusic(1);
+            }
+
+        }
+
+
+
+        //切換歌曲
+        function changeMusic(n) {
+            let i = musicList.selectedIndex; //抓使用者選到的選項索引值
+            audio.src = musicList.children[i + n].value; //抓使用者選到的選項value屬值
+            audio.title = musicList.children[i + n].innerText;
+            musicList.children[i + n].selected = true;
+
+            if (btnPlay.innerText == ";")
+                audio.onloadeddata = playMusic;  //歌曲載完才呼叫playMusic函數
+
+        }
+
+
+        setVolumeByRangeBar();  //初始音量
+        //音量調整
+        function setVolumeByRangeBar() {
+            audio.volume = volRangeBar.value / 100;
+            txtVol.value = volRangeBar.value;
+        }
+
+        function setVolume(n) {
+            volRangeBar.value = parseInt(volRangeBar.value) + n;
+            setVolumeByRangeBar();
+        }
+
+
+        //設定為靜音
+        function setMute() {
+            audio.muted = !audio.muted;
+        }
+
+        //音樂快轉或倒轉
+        function changeTime(s) {
+            audio.currentTime += s;
+        }
+
+
+        //音樂停止
+        function stopMusic() {
+            //1.音樂停下來  2.時間歸零
+            pauseMusic();//1.音樂停下來 
+            audio.currentTime = 0;//  2.時間歸零
+            infoPanel[1].innerText = "音樂停止";
+
+        }
+
+        //音樂暫停
+        function pauseMusic() {
+            audio.pause();
+            btnPlay.innerText = "4";//改變外觀
+            btnPlay.onclick = playMusic;
+            infoPanel[1].innerText = "音樂暫停中...";
+
+        }
+
+        //播放音樂
+        function playMusic() {
+            audio.play();  //播放音樂
+            btnPlay.innerText = ";";//改變外觀
+            btnPlay.onclick = pauseMusic;
+            infoPanel[1].innerText = "正在播放" + audio.title + "中...";
+
+            setInterval(() => getMusicTime(), 0.1);
+
+            progressBar.max = audio.duration * 10000;
+            console.log(progressBar.max);
+
+        }
+
+    </script>
+
+</body>
+
+</html>
